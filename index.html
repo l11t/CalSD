@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bakery Pro - Space Edition</title>
+    <title>Bakery Pro - Ultimate Edition</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥖</text></svg>">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -44,7 +44,6 @@
         
         .scaling-header { background: #fff9e6; padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #f9ebbe; }
         
-        /* ТУК Е ПОПРАВКАТА ЗА ВИДИМОСТ НА ТЕЛЕФОН */
         .row { 
             display: flex; align-items: center; gap: 4px; 
             margin-bottom: 6px; background: #fff; padding: 4px; 
@@ -52,13 +51,13 @@
             width: 100%; box-sizing: border-box;
         }
         .drag-handle { color: #ccc; font-size: 16px; padding: 0 2px; }
-        .name-in { flex: 1.2; font-weight: bold; padding: 6px 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; min-width: 0; }
-        .val-p { width: 45px; padding: 6px 2px; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 13px; }
+        .name-in { flex: 1.5; font-weight: bold; padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; min-width: 0; }
+        .val-p { width: 50px; padding: 8px 2px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; }
         .res-box { 
-            background: #f0f7ff; padding: 6px 2px; border-radius: 4px; 
-            width: 60px; text-align: center; font-weight: 900; 
-            color: var(--blue); border: 1.5px solid #d0e4ff; font-size: 13px; 
-            flex-shrink: 0; /* Не позволява на кутийката да се свива */
+            background: #f0f7ff; padding: 8px 2px; border-radius: 6px; 
+            width: 70px; text-align: center; font-weight: 900; 
+            color: var(--blue); border: 2px solid #d0e4ff; font-size: 13px; 
+            flex-shrink: 0;
         }
         
         .sum-box { background: var(--green); color: white; padding: 12px; border-radius: 8px; text-align: center; font-size: 18px; font-weight: bold; margin-top: 15px; }
@@ -67,7 +66,6 @@
         .res-out { background: white; padding: 8px; border: 2px solid #ddd; border-radius: 6px; font-weight: 900; font-size: 20px; text-align: center; margin-top: 5px; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media print { .audio-bar, .tabs-header, .drag-handle, button { display: none !important; } }
     </style>
 </head>
 <body>
@@ -109,6 +107,14 @@
             <div id="p1_res" class="res-out" style="color:var(--blue); border-color:var(--blue);">3.25 %</div>
             <button class="calc-btn" onclick="calcP1()">ИЗЧИСЛИ!</button>
         </div>
+        <div class="perc-section">
+            <div style="font-size:13px; font-weight:bold;">Стойност от процент?</div>
+            <div style="display:flex; align-items:center; gap:5px; margin-top:8px;">
+                <input type="number" id="p2_v1" class="val-p" style="flex:1" value="3.25"> % от <input type="number" id="p2_v2" class="val-p" style="flex:1" value="1000">
+            </div>
+            <div id="p2_res" class="res-out" style="color:var(--green); border-color:var(--green);">32.5</div>
+            <button class="calc-btn" style="background:var(--green)" onclick="calcP2()">ИЗЧИСЛИ!</button>
+        </div>
     </div>
 
     <div id="levain" class="tab-content">
@@ -142,8 +148,7 @@
     const tabConfig = [{ id: 'bread', label: 'РЕЦЕПТА', icon: '🥖' }, { id: 'perc', label: 'СМЕТКИ', icon: '％' }, { id: 'levain', label: 'КВАС', icon: '🧪' }];
 
     window.onload = () => {
-        const order = ['bread', 'perc', 'levain'];
-        renderTabBar(order);
+        renderTabBar(['bread', 'perc', 'levain']);
         const data = JSON.parse(localStorage.getItem('bakeryFinalData')) || {
             target: "2*700",
             flours: [{n: "Бяло Брашно", p: 100}, {n: "Пълнозърнесто", p: 0}],
@@ -179,14 +184,14 @@
         flours.forEach(item => {
             fList.innerHTML += `<div class="row"><div style="width:20px"></div>
                 <input type="text" class="name-in flour-n" value="${item.n}" oninput="recalc()">
-                <input type="number" class="val-p flour-p" value="${item.p}" oninput="recalc()"> <span style="font-size:10px">%</span>
+                <input type="number" class="val-p flour-p" value="${item.p}" oninput="recalc()">
                 <div class="res-box flour-g">0</div></div>`;
         });
         const oList = document.getElementById('sortable-list'); oList.innerHTML = '';
         others.forEach(item => {
             oList.innerHTML += `<div class="row"><div class="drag-handle">⣿</div>
                 <input type="text" class="name-in other-n" value="${item.n}" oninput="recalc()">
-                <input type="number" class="val-p other-p" value="${item.p}" oninput="recalc()"> <span style="font-size:10px">%</span>
+                <input type="number" class="val-p other-p" value="${item.p}" oninput="recalc()">
                 <div class="res-box other-g">0</div></div>`;
         });
     }
@@ -211,14 +216,12 @@
         }
 
         document.querySelectorAll('.flour-g').forEach((el, i) => el.innerText = Math.round(unit * (parseFloat(document.querySelectorAll('.flour-p')[i].value) || 0)));
-        
         let levainG = 0;
         document.querySelectorAll('.other-g').forEach((el, i) => {
             let g = unit * (parseFloat(document.querySelectorAll('.other-p')[i].value) || 0);
             el.innerText = Math.round(g);
             if(document.querySelectorAll('.other-n')[i].value.toLowerCase().includes("квас")) levainG = g;
         });
-
         document.getElementById('totalSum').innerText = Math.round(unit * totalPct);
         document.getElementById('levain_needed').innerText = Math.round(levainG) + " гр.";
         window.currentLevainTotal = levainG;
@@ -227,10 +230,8 @@
     }
 
     function calcLevain() {
-        let total = window.currentLevainTotal || 0;
-        let hydr = parseFloat(document.getElementById('levain_hydr').value) || 100;
-        let f = total / (1 + (hydr/100));
-        let w = total - f;
+        let total = window.currentLevainTotal || 0, hydr = parseFloat(document.getElementById('levain_hydr').value) || 100;
+        let f = total / (1 + (hydr/100)), w = total - f;
         document.getElementById('levain_flour_res').innerText = Math.round(f) + " гр.";
         document.getElementById('levain_water_res').innerText = Math.round(w) + " гр.";
     }
@@ -250,6 +251,7 @@
     }
     function changeVol(v) { audio.volume = v; }
     function calcP1() { let v1 = document.getElementById('p1_v1').value, v2 = document.getElementById('p1_v2').value; if(v2) document.getElementById('p1_res').innerText = ((v1/v2)*100).toFixed(1) + " %"; }
+    function calcP2() { let v1 = document.getElementById('p2_v1').value, v2 = document.getElementById('p2_v2').value; if(v1 && v2) document.getElementById('p2_res').innerText = ((v1/100)*v2).toFixed(1); }
 </script>
 </body>
 </html>
