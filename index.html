@@ -26,15 +26,17 @@
 
         .tabs-header { display: flex; background: #fff; border-bottom: 2px solid #eee; padding: 6px; gap: 4px; }
         .tab-btn { 
-            flex: 1; padding: 10px 2px; cursor: pointer; 
+            flex: 1; padding: 10px 2px; cursor: move; 
             font-weight: 800; font-size: 11px; border-radius: 8px;
             transition: 0.2s; color: #7f8c8d; background: #fff;
             display: flex; flex-direction: column; align-items: center; gap: 2px;
             border: 2px solid #ecf0f1;
+            user-select: none;
         }
         .tab-btn.active { border-color: var(--blue); color: var(--blue); background: #f0f7ff; }
         .tab-btn[data-id="bread"].active { border-color: var(--green); color: var(--green); background: #f0fff4; }
         .tab-btn[data-id="levain"].active { border-color: var(--orange); color: var(--orange); background: #fffaf0; }
+        .tab-btn.dragging { opacity: 0.4; border: 2px dashed #ccc; }
         
         .tab-content { display: none; padding: 12px; animation: fadeIn 0.2s; }
         .tab-content.active { display: block; }
@@ -145,10 +147,16 @@
 <script>
     let lastMode = 'total';
     const audio = document.getElementById('bgMusic');
-    const tabConfig = [{ id: 'bread', label: 'РЕЦЕПТА', icon: '🥖' }, { id: 'perc', label: 'СМЕТКИ', icon: '％' }, { id: 'levain', label: 'КВАС', icon: '🧪' }];
+    const tabConfig = [
+        { id: 'bread', label: 'РЕЦЕПТА', icon: '🥖' }, 
+        { id: 'perc', label: 'СМЕТКИ', icon: '％' }, 
+        { id: 'levain', label: 'КВАС', icon: '🧪' }
+    ];
 
     window.onload = () => {
-        renderTabBar(['bread', 'perc', 'levain']);
+        const savedOrder = JSON.parse(localStorage.getItem('bakeryTabOrder')) || ['bread', 'perc', 'levain'];
+        renderTabBar(savedOrder);
+        
         const data = JSON.parse(localStorage.getItem('bakeryFinalData')) || {
             target: "2*700",
             flours: [{n: "Бяло Брашно", p: 100}, {n: "Пълнозърнесто", p: 0}],
@@ -156,18 +164,55 @@
         };
         document.getElementById('targetTotal').value = data.target;
         renderIngredients(data.flours, data.others);
-        switchTab('bread');
+        
+        // Винаги активираме първия таб от текущия ред
+        switchTab(savedOrder[0]);
         recalc();
     };
 
     function renderTabBar(order) {
-        const bar = document.getElementById('tabBar'); bar.innerHTML = '';
+        const bar = document.getElementById('tabBar'); 
+        bar.innerHTML = '';
         order.forEach(id => {
             const config = tabConfig.find(c => c.id === id);
             const btn = document.createElement('button');
-            btn.className = 'tab-btn'; btn.dataset.id = id;
+            btn.className = 'tab-btn'; 
+            btn.dataset.id = id;
+            btn.draggable = true;
             btn.innerHTML = `<span>${config.icon}</span> ${config.label}`;
+            
+            // Клик за смяна на таб
             btn.onclick = () => switchTab(id);
+
+            // Drag & Drop логика
+            btn.ondragstart = (e) => {
+                e.dataTransfer.setData('text/plain', id);
+                btn.classList.add('dragging');
+            };
+
+            btn.ondragend = () => btn.classList.remove('dragging');
+
+            btn.ondragover = (e) => e.preventDefault();
+
+            btn.ondrop = (e) => {
+                e.preventDefault();
+                const draggedId = e.dataTransfer.getData('text/plain');
+                if (draggedId !== id) {
+                    const currentOrder = [...document.querySelectorAll('.tab-btn')].map(b => b.dataset.id);
+                    const fromIdx = currentOrder.indexOf(draggedId);
+                    const toIdx = currentOrder.indexOf(id);
+                    currentOrder.splice(fromIdx, 1);
+                    currentOrder.splice(toIdx, 0, draggedId);
+                    
+                    localStorage.setItem('bakeryTabOrder', JSON.stringify(currentOrder));
+                    renderTabBar(currentOrder);
+                    
+                    // Запазване на визуално активния таб
+                    const activeContent = document.querySelector('.tab-content.active').id;
+                    switchTab(activeContent);
+                }
+            };
+
             bar.appendChild(btn);
         });
     }
@@ -175,8 +220,12 @@
     function switchTab(id) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelector(`.tab-btn[data-id="${id}"]`).classList.add('active');
+        
+        const content = document.getElementById(id);
+        const btn = document.querySelector(`.tab-btn[data-id="${id}"]`);
+        
+        if (content) content.classList.add('active');
+        if (btn) btn.classList.add('active');
     }
 
     function renderIngredients(flours, others) {
