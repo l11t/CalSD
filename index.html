@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bakery Pro - Stroke Edition</title>
+    <style>
+        :root { 
+            --blue: #3498db; --green: #2ecc71; --orange: #e67e22; 
+            --bg: #f4f7f6; --dark: #2c3e50;
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        
+        .container { width: 100%; max-width: 800px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 20px; border: 1px solid #ddd; }
+
+        /* ТАБОВЕ СЪС STROKE (КОНТУР) */
+        .tabs-header { display: flex; background: #fff; border-bottom: 2px solid #eee; padding: 8px; gap: 8px; }
+        .tab-btn { 
+            flex: 1; padding: 10px 5px; cursor: grab; 
+            font-weight: 800; font-size: 13px; border-radius: 10px;
+            transition: all 0.2s; color: #7f8c8d; background: #fff;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            user-select: none;
+            border: 2px solid #ecf0f1; /* Стандартен светъл контур */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .tab-btn:active { cursor: grabbing; }
+        .tab-btn.dragging { opacity: 0.4; }
+
+        /* Специфични контури за всеки таб при активност или hover */
+        .tab-btn[data-id="bread"].active { border-color: var(--green); color: var(--green); background: #f0fff4; }
+        .tab-btn[data-id="perc"].active { border-color: var(--blue); color: var(--blue); background: #f0f7ff; }
+        .tab-btn[data-id="levain"].active { border-color: var(--orange); color: var(--orange); background: #fffaf0; }
+        
+        /* Леко подчертаване при докосване/мишка */
+        .tab-btn:hover { border-color: #bdc3c7; }
+
+        .tab-btn span { font-size: 18px; pointer-events: none; }
+
+        .tab-content { display: none; padding: 20px; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ОСТАНАЛИ КОМПОНЕНТИ */
+        .audio-bar { width: 100%; max-width: 800px; background: var(--dark); color: white; padding: 10px 20px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; box-sizing: border-box; }
+        .play-btn { background: var(--green); border: none; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+        .scaling-header { background: #fff9e6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #f9ebbe; }
+        .row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; background: #fff; padding: 6px; border-radius: 8px; border: 1px solid #f0f0f0; }
+        .drag-handle { cursor: grab; color: #bdc3c7; font-size: 20px; padding: 0 5px; }
+        .name-in { flex: 2; font-weight: bold; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+        .val-p { width: 70px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; text-align: center; }
+        .res-box { background: #f0f7ff; padding: 8px; border-radius: 6px; min-width: 80px; text-align: center; font-weight: bold; color: var(--blue); border: 2px solid #d0e4ff; }
+        .sum-box { background: var(--green); color: white; padding: 15px; border-radius: 10px; text-align: center; font-size: 22px; font-weight: bold; margin-top: 20px; border: 3px solid #27ae60; }
+        
+        .perc-section { margin-bottom: 20px; padding: 15px; border: 2px solid #eee; border-radius: 10px; background: #fafafa; }
+        .calc-btn { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; box-shadow: 0 3px 0 #2980b9; }
+        .calc-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #2980b9; }
+        .calc-btn.orange { background: var(--orange); box-shadow: 0 3px 0 #d35400; }
+        .calc-btn.orange:active { box-shadow: 0 1px 0 #d35400; }
+        
+        .res-out { background: white; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-weight: 900; font-size: 24px; text-align: center; margin-top: 5px; }
+
+        @media print { .audio-bar, .tabs-header, .drag-handle, button, .scaling-header { display: none !important; } }
+    </style>
+</head>
+<body>
+
+<div class="audio-bar">
+    <button class="play-btn" id="audioBtn" onclick="toggleMusic()">▶ RADIO</button>
+    <input type="range" min="0" max="1" step="0.1" value="0.5" oninput="changeVol(this.value)" style="width:80px">
+</div>
+
+<div class="container">
+    <div class="tabs-header" id="tabBar"></div>
+
+    <div id="bread" class="tab-content">
+        <div class="scaling-header">
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="font-size:11px; font-weight:bold; color: #7f8c8d;">ОБЩО ТЕГЛО (гр):</label>
+                    <input type="text" id="targetTotal" style="width:100%; border:none; background:transparent; font-size:22px; font-weight:900;" placeholder="2*700" oninput="recalc()">
+                </div>
+                <div style="flex: 1; border-left: 2px solid #eee; padding-left: 10px;">
+                    <label style="font-size:11px; font-weight:bold; color: #7f8c8d;">ФИКС. БРАШНО:</label>
+                    <input type="number" id="fixedFlour" style="width:100%; border:none; background:transparent; font-size:22px; font-weight:900; color:var(--blue);" oninput="scaleByFlour()">
+                </div>
+            </div>
+            <div id="formulaResult" style="color:var(--orange); font-size:12px; font-weight:bold;"></div>
+        </div>
+        <div id="flour-list"></div>
+        <div style="margin: 15px 0 10px 5px; font-size: 11px; font-weight: bold; color: #95a5a6; text-transform: uppercase;">Добавки</div>
+        <div id="sortable-list"></div>
+        <div class="sum-box">ОБЩО ТЕСТО: <span id="totalSum">0</span> гр.</div>
+    </div>
+
+    <div id="perc" class="tab-content">
+        <div class="perc-section">
+            <div style="font-weight:bold;">Какъв процент е?</div>
+            <div style="display:flex; align-items:center; gap:5px; margin-top:10px;">
+                <input type="number" id="p1_v1" class="val-p" style="flex:1" value="32.5"> от <input type="number" id="p1_v2" class="val-p" style="flex:1" value="1000">
+            </div>
+            <div id="p1_res" class="res-out" style="color:var(--blue); border-color:var(--blue);">3.25 %</div>
+            <button class="calc-btn" onclick="calcP1()">ИЗЧИСЛИ!</button>
+        </div>
+        <div class="perc-section">
+            <div style="font-weight:bold;">Стойност от процент?</div>
+            <div style="display:flex; align-items:center; gap:5px; margin-top:10px;">
+                <input type="number" id="p2_v1" class="val-p" style="flex:1" value="3.25"> % от <input type="number" id="p2_v2" class="val-p" style="flex:1" value="1000">
+            </div>
+            <div id="p2_res" class="res-out" style="color:var(--green); border-color:var(--green);">32.5</div>
+            <button class="calc-btn" onclick="calcP2()">ИЗЧИСЛИ!</button>
+        </div>
+    </div>
+
+    <div id="levain" class="tab-content">
+        <div class="perc-section" style="border-left: 5px solid var(--orange); border-right: 2px solid var(--orange); border-top: 2px solid var(--orange); border-bottom: 2px solid var(--orange);">
+            <div style="font-weight:bold;">Квас нужен за рецептата:</div>
+            <div id="levain_needed" style="font-size:32px; font-weight:900; color:var(--orange);">0 гр.</div>
+        </div>
+        <div class="perc-section">
+            <div style="font-weight:bold;">Хидратация на вашия квас (%):</div>
+            <input type="number" id="levain_hydr" class="val-p" value="100" style="width:100%; font-size:24px; margin-top:10px;">
+            <button class="calc-btn orange" onclick="calcLevain()">ИЗЧИСЛИ КВАСА!</button>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <div class="perc-section" style="flex:1;">
+                <div style="font-size:12px; font-weight:bold;">БРАШНО</div>
+                <div id="levain_flour_res" class="res-out" style="color:var(--green); border-color:var(--green);">0 гр.</div>
+            </div>
+            <div class="perc-section" style="flex:1;">
+                <div style="font-size:12px; font-weight:bold;">ВОДА</div>
+                <div id="levain_water_res" class="res-out" style="color:var(--blue); border-color:var(--blue);">0 гр.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<audio id="bgMusic" loop src="https://stream.zeno.fm/0r0xa792kwzuv"></audio>
+
+<script>
+    let lastMode = 'total';
+    const audio = document.getElementById('bgMusic');
+    const tabConfig = [{ id: 'bread', label: 'РЕЦЕПТА', icon: '🥖' }, { id: 'perc', label: 'СМЕТКИ', icon: '％' }, { id: 'levain', label: 'КВАС', icon: '🧪' }];
+
+    window.onload = () => {
+        const order = JSON.parse(localStorage.getItem('tabOrder')) || ['bread', 'perc', 'levain'];
+        renderTabBar(order);
+        const data = JSON.parse(localStorage.getItem('bakeryFinalData')) || {
+            target: "2*700",
+            flours: [{n: "Бяло Брашно", p: 100}, {n: "Пълнозърнесто", p: 0}],
+            others: [{n: "Вода", p: 64}, {n: "Квас", p: 20}, {n: "Сол", p: 3.25}, {n: "Зехтин", p: 1.25}, {n: "", p: 0}, {n: "", p: 0}, {n: "", p: 0}]
+        };
+        document.getElementById('targetTotal').value = data.target;
+        renderIngredients(data.flours, data.others);
+        switchTab(order[0]);
+        recalc();
+    };
+
+    function renderTabBar(order) {
+        const bar = document.getElementById('tabBar'); bar.innerHTML = '';
+        order.forEach(id => {
+            const config = tabConfig.find(c => c.id === id);
+            const btn = document.createElement('button');
+            btn.className = 'tab-btn'; btn.draggable = true; btn.dataset.id = id;
+            btn.innerHTML = `<span>${config.icon}</span> ${config.label}`;
+            btn.onclick = () => switchTab(id);
+            btn.ondragstart = (e) => { btn.classList.add('dragging'); e.dataTransfer.setData('text/plain', id); };
+            btn.ondragend = () => { btn.classList.remove('dragging'); saveTabOrder(); };
+            bar.appendChild(btn);
+        });
+        bar.ondragover = (e) => {
+            e.preventDefault();
+            const dragging = document.querySelector('.dragging');
+            const siblings = [...bar.querySelectorAll('.tab-btn:not(.dragging)')];
+            const next = siblings.find(sib => e.clientX <= sib.offsetLeft + sib.offsetWidth / 2);
+            bar.insertBefore(dragging, next);
+        };
+    }
+
+    function switchTab(id) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        const activeBtn = document.querySelector(`.tab-btn[data-id="${id}"]`);
+        if(activeBtn) activeBtn.classList.add('active');
+    }
+
+    function saveTabOrder() {
+        const order = [...document.querySelectorAll('.tab-btn')].map(b => b.dataset.id);
+        localStorage.setItem('tabOrder', JSON.stringify(order));
+    }
+
+    function renderIngredients(flours, others) {
+        const fList = document.getElementById('flour-list'); fList.innerHTML = '';
+        flours.forEach(item => {
+            fList.innerHTML += `<div class="row"><div style="width:30px"></div>
+                <input type="text" class="name-in flour-n" value="${item.n}" oninput="recalc()">
+                <input type="number" class="val-p flour-p" value="${item.p}" oninput="recalc()"> % =
+                <div class="res-box flour-g">0</div></div>`;
+        });
+        const oList = document.getElementById('sortable-list'); oList.innerHTML = '';
+        others.forEach(item => {
+            const row = document.createElement('div'); row.className = 'row'; row.draggable = true;
+            row.innerHTML = `<div class="drag-handle">⣿</div>
+                <input type="text" class="name-in other-n" value="${item.n}" oninput="recalc()">
+                <input type="number" class="val-p other-p" value="${item.p}" oninput="recalc()"> % =
+                <div class="res-box other-g">0</div>`;
+            row.ondragstart = () => row.classList.add('row-dragging');
+            row.ondragend = () => { row.classList.remove('row-dragging'); recalc(); };
+            oList.appendChild(row);
+        });
+        oList.ondragover = (e) => {
+            e.preventDefault();
+            const dragging = document.querySelector('.row-dragging');
+            const siblings = [...oList.querySelectorAll('.row:not(.row-dragging)')];
+            const next = siblings.find(sib => e.clientY <= sib.offsetTop + sib.offsetHeight / 2);
+            oList.insertBefore(dragging, next);
+        };
+    }
+
+    function scaleByFlour() { lastMode = 'flour'; document.getElementById('targetTotal').value = ""; recalc(); }
+    
+    function recalc() {
+        let flourPct = 0, totalPct = 0;
+        document.querySelectorAll('.flour-p').forEach(el => flourPct += (parseFloat(el.value) || 0));
+        document.querySelectorAll('.other-p').forEach(el => totalPct += (parseFloat(el.value) || 0));
+        totalPct += flourPct;
+
+        let unit = 0;
+        if (lastMode === 'total') {
+            const formula = document.getElementById('targetTotal').value;
+            let target = 0; try { target = eval(formula.replace(/[^-()\d/*+.]/g, '')) || 0; } catch(e) {}
+            document.getElementById('formulaResult').innerText = target > 0 ? "= " + target + " гр." : "";
+            if (target > 0 && totalPct > 0) unit = target / totalPct;
+        } else {
+            const fixed = parseFloat(document.getElementById('fixedFlour').value) || 0;
+            if (fixed > 0 && flourPct > 0) unit = fixed / flourPct;
+        }
+
+        document.querySelectorAll('.flour-g').forEach((el, i) => el.innerText = (unit * (parseFloat(document.querySelectorAll('.flour-p')[i].value) || 0)).toFixed(1));
+        
+        let levainG = 0;
+        document.querySelectorAll('.other-g').forEach((el, i) => {
+            let g = unit * (parseFloat(document.querySelectorAll('.other-p')[i].value) || 0);
+            el.innerText = g.toFixed(1);
+            if(document.querySelectorAll('.other-n')[i].value.toLowerCase().includes("квас")) levainG = g;
+        });
+
+        document.getElementById('totalSum').innerText = Math.round(unit * totalPct);
+        document.getElementById('levain_needed').innerText = Math.round(levainG) + " гр.";
+        window.currentLevainTotal = levainG;
+        calcLevain();
+        saveData();
+    }
+
+    function calcLevain() {
+        let total = window.currentLevainTotal || 0;
+        let hydr = parseFloat(document.getElementById('levain_hydr').value) || 100;
+        let f = total / (1 + (hydr/100));
+        let w = total - f;
+        document.getElementById('levain_flour_res').innerText = f.toFixed(1) + " гр.";
+        document.getElementById('levain_water_res').innerText = w.toFixed(1) + " гр.";
+    }
+
+    function saveData() {
+        const data = {
+            target: document.getElementById('targetTotal').value,
+            flours: [...document.querySelectorAll('.flour-n')].map((el, i) => ({ n: el.value, p: document.querySelectorAll('.flour-p')[i].value })),
+            others: [...document.querySelectorAll('.other-n')].map((el, i) => ({ n: el.value, p: document.querySelectorAll('.other-p')[i].value }))
+        };
+        localStorage.setItem('bakeryFinalData', JSON.stringify(data));
+    }
+
+    function toggleMusic() { 
+        if(audio.paused) { audio.play(); document.getElementById('audioBtn').innerText = "⏸ PAUSE"; }
+        else { audio.pause(); document.getElementById('audioBtn').innerText = "▶ RADIO"; }
+    }
+    function changeVol(v) { audio.volume = v; }
+    function calcP1() { let v1 = document.getElementById('p1_v1').value, v2 = document.getElementById('p1_v2').value; if(v2) document.getElementById('p1_res').innerText = ((v1/v2)*100).toFixed(1) + " %"; }
+    function calcP2() { let v1 = document.getElementById('p2_v1').value, v2 = document.getElementById('p2_v2').value; if(v1 && v2) document.getElementById('p2_res').innerText = ((v1/100)*v2).toFixed(1); }
+</script>
+</body>
+</html>
