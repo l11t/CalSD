@@ -2,39 +2,47 @@
 <html lang="bg">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
     <title>Bakery Pro - Stroke Edition</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥖</text></svg>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <style>
         :root { 
             --blue: #3498db; --green: #2ecc71; --orange: #e67e22; 
             --bg: #f4f7f6; --dark: #2c3e50;
         }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        
+        body { 
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
         
         .container { width: 100%; max-width: 800px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 20px; border: 1px solid #ddd; }
 
         /* ТАБОВЕ СЪС STROKE (КОНТУР) */
         .tabs-header { display: flex; background: #fff; border-bottom: 2px solid #eee; padding: 8px; gap: 8px; }
         .tab-btn { 
-            flex: 1; padding: 10px 5px; cursor: grab; 
+            flex: 1; padding: 12px 5px; cursor: pointer; 
             font-weight: 800; font-size: 13px; border-radius: 10px;
             transition: all 0.2s; color: #7f8c8d; background: #fff;
             display: flex; flex-direction: column; align-items: center; gap: 4px;
             user-select: none;
-            border: 2px solid #ecf0f1; /* Стандартен светъл контур */
+            border: 2px solid #ecf0f1;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .tab-btn:active { cursor: grabbing; }
-        .tab-btn.dragging { opacity: 0.4; }
 
-        /* Специфични контури за всеки таб при активност или hover */
         .tab-btn[data-id="bread"].active { border-color: var(--green); color: var(--green); background: #f0fff4; }
         .tab-btn[data-id="perc"].active { border-color: var(--blue); color: var(--blue); background: #f0f7ff; }
         .tab-btn[data-id="levain"].active { border-color: var(--orange); color: var(--orange); background: #fffaf0; }
         
-        /* Леко подчертаване при докосване/мишка */
-        .tab-btn:hover { border-color: #bdc3c7; }
-
         .tab-btn span { font-size: 18px; pointer-events: none; }
 
         .tab-content { display: none; padding: 20px; animation: fadeIn 0.3s; }
@@ -43,20 +51,21 @@
 
         /* ОСТАНАЛИ КОМПОНЕНТИ */
         .audio-bar { width: 100%; max-width: 800px; background: var(--dark); color: white; padding: 10px 20px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; box-sizing: border-box; }
-        .play-btn { background: var(--green); border: none; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+        .play-btn { background: var(--green); border: none; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; min-width: 100px; }
+        
         .scaling-header { background: #fff9e6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #f9ebbe; }
         .row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; background: #fff; padding: 6px; border-radius: 8px; border: 1px solid #f0f0f0; }
         .drag-handle { cursor: grab; color: #bdc3c7; font-size: 20px; padding: 0 5px; }
-        .name-in { flex: 2; font-weight: bold; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
-        .val-p { width: 70px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; text-align: center; }
-        .res-box { background: #f0f7ff; padding: 8px; border-radius: 6px; min-width: 80px; text-align: center; font-weight: bold; color: var(--blue); border: 2px solid #d0e4ff; }
+        .name-in { flex: 2; font-weight: bold; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .val-p { width: 65px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 14px; }
+        .res-box { background: #f0f7ff; padding: 8px; border-radius: 6px; min-width: 75px; text-align: center; font-weight: bold; color: var(--blue); border: 2px solid #d0e4ff; }
+        
         .sum-box { background: var(--green); color: white; padding: 15px; border-radius: 10px; text-align: center; font-size: 22px; font-weight: bold; margin-top: 20px; border: 3px solid #27ae60; }
         
         .perc-section { margin-bottom: 20px; padding: 15px; border: 2px solid #eee; border-radius: 10px; background: #fafafa; }
         .calc-btn { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; box-shadow: 0 3px 0 #2980b9; }
         .calc-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #2980b9; }
         .calc-btn.orange { background: var(--orange); box-shadow: 0 3px 0 #d35400; }
-        .calc-btn.orange:active { box-shadow: 0 1px 0 #d35400; }
         
         .res-out { background: white; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-weight: 900; font-size: 24px; text-align: center; margin-top: 5px; }
 
@@ -113,7 +122,7 @@
     </div>
 
     <div id="levain" class="tab-content">
-        <div class="perc-section" style="border-left: 5px solid var(--orange); border-right: 2px solid var(--orange); border-top: 2px solid var(--orange); border-bottom: 2px solid var(--orange);">
+        <div class="perc-section" style="border-left: 5px solid var(--orange); border-color: var(--orange);">
             <div style="font-weight:bold;">Квас нужен за рецептата:</div>
             <div id="levain_needed" style="font-size:32px; font-weight:900; color:var(--orange);">0 гр.</div>
         </div>
@@ -135,7 +144,7 @@
     </div>
 </div>
 
-<audio id="bgMusic" loop src="https://stream.zeno.fm/0r0xa792kwzuv"></audio>
+<audio id="bgMusic" loop preload="none" src="https://stream.zeno.fm/0r0xa792kwzuv"></audio>
 
 <script>
     let lastMode = 'total';
@@ -148,7 +157,7 @@
         const data = JSON.parse(localStorage.getItem('bakeryFinalData')) || {
             target: "2*700",
             flours: [{n: "Бяло Брашно", p: 100}, {n: "Пълнозърнесто", p: 0}],
-            others: [{n: "Вода", p: 64}, {n: "Квас", p: 20}, {n: "Сол", p: 3.25}, {n: "Зехтин", p: 1.25}, {n: "", p: 0}, {n: "", p: 0}, {n: "", p: 0}]
+            others: [{n: "Вода", p: 64}, {n: "Квас", p: 20}, {n: "Сол", p: 2}, {n: "Зехтин", p: 0}, {n: "", p: 0}, {n: "", p: 0}]
         };
         document.getElementById('targetTotal').value = data.target;
         renderIngredients(data.flours, data.others);
@@ -161,20 +170,11 @@
         order.forEach(id => {
             const config = tabConfig.find(c => c.id === id);
             const btn = document.createElement('button');
-            btn.className = 'tab-btn'; btn.draggable = true; btn.dataset.id = id;
+            btn.className = 'tab-btn'; btn.dataset.id = id;
             btn.innerHTML = `<span>${config.icon}</span> ${config.label}`;
             btn.onclick = () => switchTab(id);
-            btn.ondragstart = (e) => { btn.classList.add('dragging'); e.dataTransfer.setData('text/plain', id); };
-            btn.ondragend = () => { btn.classList.remove('dragging'); saveTabOrder(); };
             bar.appendChild(btn);
         });
-        bar.ondragover = (e) => {
-            e.preventDefault();
-            const dragging = document.querySelector('.dragging');
-            const siblings = [...bar.querySelectorAll('.tab-btn:not(.dragging)')];
-            const next = siblings.find(sib => e.clientX <= sib.offsetLeft + sib.offsetWidth / 2);
-            bar.insertBefore(dragging, next);
-        };
     }
 
     function switchTab(id) {
@@ -183,11 +183,6 @@
         document.getElementById(id).classList.add('active');
         const activeBtn = document.querySelector(`.tab-btn[data-id="${id}"]`);
         if(activeBtn) activeBtn.classList.add('active');
-    }
-
-    function saveTabOrder() {
-        const order = [...document.querySelectorAll('.tab-btn')].map(b => b.dataset.id);
-        localStorage.setItem('tabOrder', JSON.stringify(order));
     }
 
     function renderIngredients(flours, others) {
@@ -200,22 +195,13 @@
         });
         const oList = document.getElementById('sortable-list'); oList.innerHTML = '';
         others.forEach(item => {
-            const row = document.createElement('div'); row.className = 'row'; row.draggable = true;
+            const row = document.createElement('div'); row.className = 'row';
             row.innerHTML = `<div class="drag-handle">⣿</div>
                 <input type="text" class="name-in other-n" value="${item.n}" oninput="recalc()">
                 <input type="number" class="val-p other-p" value="${item.p}" oninput="recalc()"> % =
                 <div class="res-box other-g">0</div>`;
-            row.ondragstart = () => row.classList.add('row-dragging');
-            row.ondragend = () => { row.classList.remove('row-dragging'); recalc(); };
             oList.appendChild(row);
         });
-        oList.ondragover = (e) => {
-            e.preventDefault();
-            const dragging = document.querySelector('.row-dragging');
-            const siblings = [...oList.querySelectorAll('.row:not(.row-dragging)')];
-            const next = siblings.find(sib => e.clientY <= sib.offsetTop + sib.offsetHeight / 2);
-            oList.insertBefore(dragging, next);
-        };
     }
 
     function scaleByFlour() { lastMode = 'flour'; document.getElementById('targetTotal').value = ""; recalc(); }
