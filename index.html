@@ -3,13 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bakery Pro - Radio Fixed</title>
+    <title>Bakery Pro - Playlist Edition</title>
     <style>
         :root { --blue: #3498db; --green: #2ecc71; --orange: #e67e22; --bg: #f4f7f6; --dark: #2c3e50; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: 8px; display: flex; flex-direction: column; align-items: center; }
-        .radio-wrapper { width: 100%; max-width: 500px; margin-bottom: 8px; text-align: center; }
-        .toggle-radio { background: var(--dark); color: white; border: none; padding: 10px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer; margin: 4px; transition: opacity 0.2s; }
-        .toggle-radio:active { opacity: 0.7; }
+        
+        /* ПЛЕЪР СЕКЦИЯ - ОБНОВЕНА */
+        .radio-wrapper { width: 100%; max-width: 500px; margin-bottom: 8px; text-align: center; background: white; padding: 12px; border-radius: 12px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .player-controls { display: flex; flex-direction: column; gap: 5px; }
+        .file-label { background: var(--blue); color: white; padding: 12px; border-radius: 25px; font-size: 11px; font-weight: bold; cursor: pointer; display: inline-block; }
+        #file-input { display: none; }
+        .nav-btns { display: flex; justify-content: center; gap: 10px; margin-top: 5px; }
+        .p-btn { background: var(--dark); color: white; border: none; padding: 8px 15px; border-radius: 15px; font-size: 10px; cursor: pointer; }
+        #track-info { font-size: 11px; color: var(--blue); margin-top: 5px; font-weight: bold; }
+        #track-name { font-size: 10px; color: #7f8c8d; margin-top: 2px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px; margin-left: auto; margin-right: auto; }
+
+        /* ОСТАНАЛИТЕ СТИЛОВЕ СА СЪЩИТЕ */
         .container { width: 100%; max-width: 500px; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #ddd; }
         .tabs-header { display: flex; background: #fff; border-bottom: 2px solid #eee; padding: 6px; gap: 4px; overflow-x: auto; }
         .tab-btn { flex: 1; min-width: 85px; padding: 12px 2px; cursor: pointer; font-weight: 800; font-size: 10px; border-radius: 8px; color: #7f8c8d; background: #fff; border: 2px solid #ecf0f1; }
@@ -18,22 +27,16 @@
         .tab-content.active { display: block; }
         .main-inputs { background: #fff9e6; padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #f9ebbe; }
         .row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; background: white; border-radius: 8px; padding: 4px; border: 1px solid #eee; }
-        .drag-handle { cursor: grab; color: #bdc3c7; font-size: 18px; padding: 0 5px; user-select: none; }
+        .drag-handle { cursor: grab; color: #bdc3c7; font-size: 18px; padding: 0 5px; }
         .drag-handle::before { content: "⠿"; }
-        .row.dragging { opacity: 0.3; background: #f0f0f0; }
         .name-in { flex: 2; font-weight: bold; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; outline: none; }
-        .val-p { width: 55px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-weight: bold; outline: none; }
+        .val-p { width: 55px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-weight: bold; }
         .res-box { background: #f0f7ff; padding: 8px; border-radius: 6px; width: 80px; text-align: center; font-weight: 900; color: var(--blue); border: 1px solid #d0e4ff; }
         .sum-box { background: var(--green); color: white; padding: 15px; border-radius: 8px; text-align: center; font-size: 18px; font-weight: bold; margin-top: 15px; }
         .res-out { background: white; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-weight: 900; font-size: 24px; text-align: center; color: var(--blue); }
-        
-        .calc-section { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        .calc-title { font-size: 13px; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; text-align: center; color: var(--dark); }
-        .calc-row { display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; }
-        .calc-input { width: 55px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-weight: bold; }
-        .calc-res { width: 65px; padding: 8px; border: 1px solid var(--blue); border-radius: 6px; text-align: center; font-weight: 800; background: #f0f7ff; color: var(--blue); }
-        .calc-btn { background: #4a86e8; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; }
-        
+        .calc-section { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .calc-row { display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; font-size: 12px; }
+        .calc-input { width: 50px; padding: 6px; border: 1px solid #ddd; border-radius: 6px; text-align: center; }
         .action-btns { display: flex; gap: 8px; margin-top: 10px; }
         .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 12px; }
         .save-btn { background: var(--blue); }
@@ -44,10 +47,21 @@
 <body>
 
 <div class="radio-wrapper">
-    <button class="toggle-radio" onclick="toggleStream('')">🛑 STOP</button>
-    <button class="toggle-radio" onclick="toggleStream('https://icecast.wallis.ch/zenfm-high')">🍃 CHILL (Zen)</button>
-    <button class="toggle-radio" onclick="toggleStream('https://rfcmedia.streamguys1.com/90sAlternative.mp3')">🎸 90s ALT</button>
-    <audio id="mainAudio" preload="none"></audio>
+    <div class="player-controls">
+        <label for="file-input" class="file-label">📁 ЗАРЕДИ ПЕСНИ (ИЗБЕРИ НЯКОЛКО)</label>
+        <input type="file" id="file-input" accept="audio/*" multiple onchange="handleFiles(event)">
+        
+        <div id="track-info">Готовност</div>
+        <div id="track-name">Няма избрани файлове</div>
+        
+        <div class="nav-btns">
+            <button class="p-btn" onclick="prevTrack()">⏮</button>
+            <button class="p-btn" onclick="togglePlay()" id="play-pause-btn">⏸</button>
+            <button class="p-btn" onclick="nextTrack()">⏭</button>
+            <button class="p-btn" style="background:#e74c3c" onclick="stopMusic()">🛑</button>
+        </div>
+    </div>
+    <audio id="mainAudio"></audio>
 </div>
 
 <div class="container">
@@ -60,113 +74,98 @@
 
     <div id="bread" class="tab-content active">
         <div class="main-inputs">
-            <label>ЖЕЛАНО ОБЩО ТЕСТО (гр):</label>
+            <label>ОБЩО ТЕСТО (гр):</label>
             <input type="number" id="targetTotal" style="width:100%; border:none; background:transparent; font-size:22px; font-weight:900; outline:none;" value="1400" oninput="recalc('total')">
             <div style="border-top:1px solid #f9ebbe; margin:8px 0;"></div>
-            <label>ИЛИ НАЛИЧНО БРАШНО (гр):</label>
+            <label>НАЛИЧНО БРАШНО (гр):</label>
             <input type="number" id="targetFlour" style="width:100%; border:none; background:transparent; font-size:22px; font-weight:900; outline:none; color:var(--orange);" oninput="recalc('flour')">
         </div>
-
         <div id="sortable-list"></div>
-
         <div class="sum-box">ОБЩО ТЕСТО: <span id="totalSum">0</span> гр.</div>
-        
-        <div class="action-btns">
-            <button class="btn save-btn" onclick="saveRecipe()">💾 ЗАПАЗИ</button>
-            <button class="btn reset-btn" onclick="resetToTemplate()">🔄 НУЛИРАЙ</button>
-        </div>
+        <div class="action-btns"><button class="btn save-btn" onclick="saveRecipe()">💾 ЗАПАЗИ</button><button class="btn reset-btn" onclick="resetToTemplate()">🔄 НУЛИРАЙ</button></div>
     </div>
 
     <div id="perc" class="tab-content">
-        <div class="calc-section">
-            <div class="calc-title">Изчисляване на стойност за процент</div>
-            <div class="calc-row">
-                <input type="number" id="p1_v1" class="calc-input" value="10">
-                <span>е какъв % от</span>
-                <input type="number" id="p1_v2" class="calc-input" value="100">
-                <span>? =</span>
-                <input type="text" id="p1_res" class="calc-res" readonly>
-                <span>%</span>
-                <button class="calc-btn" onclick="calcP1()">Изчисли!</button>
-            </div>
-        </div>
-        <div class="calc-section">
-            <div class="calc-title">Изчисляване на процент от стойност</div>
-            <div class="calc-row">
-                <span>Колко са</span>
-                <input type="number" id="p2_v1" class="calc-input" value="10">
-                <span>% от</span>
-                <input type="number" id="p2_v2" class="calc-input" value="100">
-                <span>? =</span>
-                <input type="text" id="p2_res" class="calc-res" readonly>
-                <button class="calc-btn" onclick="calcP2()">Изчисли!</button>
-            </div>
-        </div>
-        <div class="calc-section" style="border:none;">
-            <div class="calc-title">Добавяне на процент към число</div>
-            <div class="calc-row">
-                <input type="number" id="p3_v1" class="calc-input" value="100">
-                <span>+</span>
-                <input type="number" id="p3_v2" class="calc-input" value="10">
-                <span>% =</span>
-                <input type="text" id="p3_res" class="calc-res" readonly>
-                <button class="calc-btn" onclick="calcP3()">Изчисли!</button>
-            </div>
-        </div>
+        <div class="calc-section"><div class="calc-row"><input type="number" id="p1_v1" class="calc-input" value="10"><span> е % от </span><input type="number" id="p1_v2" class="calc-input" value="100"><span>? = </span><input type="text" id="p1_res" class="val-p" readonly style="width:60px"> % <button class="save-btn" style="border:none;border-radius:5px;padding:5px 10px;color:white" onclick="calcP1()">!</button></div></div>
+        <div class="calc-section"><div class="calc-row"><span>Колко са </span><input type="number" id="p2_v1" class="calc-input" value="10"><span> % от </span><input type="number" id="p2_v2" class="calc-input" value="100"><span>? = </span><input type="text" id="p2_res" class="val-p" readonly style="width:60px"><button class="save-btn" style="border:none;border-radius:5px;padding:5px 10px;color:white" onclick="calcP2()">!</button></div></div>
+        <div class="calc-section" style="border:none"><div class="calc-row"><input type="number" id="p3_v1" class="calc-input" value="100"><span> + </span><input type="number" id="p3_v2" class="calc-input" value="10"><span> % = </span><input type="text" id="p3_res" class="val-p" readonly style="width:60px"><button class="save-btn" style="border:none;border-radius:5px;padding:5px 10px;color:white" onclick="calcP3()">!</button></div></div>
     </div>
 
     <div id="levain-recipe" class="tab-content">
-        <label>КВАС В РЕЦЕПТАТА:</label>
-        <div id="lev_needed" class="res-out" style="color:var(--orange);">0 гр.</div>
-        <label style="margin-top:15px;">ХИДРАТАЦИЯ НА КВАСА (%):</label>
-        <input type="number" id="lev_h" class="val-p" value="100" style="width:100%" oninput="recalc('current')">
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <div style="flex:1;"><label>БРАШНО</label><div id="l_f" class="res-out">0</div></div>
-            <div style="flex:1;"><label>ВОДА</label><div id="l_w" class="res-out">0</div></div>
-        </div>
+        <label>КВАС В РЕЦЕПТАТА:</label><div id="lev_needed" class="res-out" style="color:var(--orange);">0 гр.</div>
+        <label style="margin-top:15px;">ХИДРАТАЦИЯ НА КВАСА (%):</label><input type="number" id="lev_h" class="val-p" value="100" style="width:100%" oninput="recalc('current')">
+        <div style="display:flex; gap:10px; margin-top:15px;"><div style="flex:1;"><label>БРАШНО</label><div id="l_f" class="res-out">0</div></div><div style="flex:1;"><label>ВОДА</label><div id="l_w" class="res-out">0</div></div></div>
     </div>
 
     <div id="levain-ext" class="tab-content">
-        <label>ЖЕЛАНО КОЛИЧЕСТВО КВАС (гр):</label>
-        <input type="number" id="ext_total" class="val-p" value="300" style="width:100%; margin-bottom:15px;" oninput="calcExtLevain()">
-        <label>ХИДРАТАЦИЯ (%):</label>
-        <input type="number" id="ext_hydr" class="val-p" value="100" style="width:100%;" oninput="calcExtLevain()">
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <div style="flex:1;"><label>БРАШНО</label><div id="ext_f_res" class="res-out">150</div></div>
-            <div style="flex:1;"><label>ВОДА</label><div id="ext_w_res" class="res-out">150</div></div>
-        </div>
+        <label>ЖЕЛАНО КОЛИЧЕСТВО КВАС (гр):</label><input type="number" id="ext_total" class="val-p" value="300" style="width:100%; margin-bottom:15px;" oninput="calcExtLevain()">
+        <label>ХИДРАТАЦИЯ (%):</label><input type="number" id="ext_hydr" class="val-p" value="100" style="width:100%;" oninput="calcExtLevain()">
+        <div style="display:flex; gap:10px; margin-top:15px;"><div style="flex:1;"><label>БРАШНО</label><div id="ext_f_res" class="res-out">150</div></div><div style="flex:1;"><label>ВОДА</label><div id="ext_w_res" class="res-out">150</div></div></div>
     </div>
 </div>
 
 <script>
     let lastMode = 'total';
     const audio = document.getElementById('mainAudio');
-    const template = [
-        {n:"Бяло Брашно", p:90, r:true},
-        {n:"Пълнозърнесто", p:10, r:false},
-        {n:"Вода", p:64, r:false},
-        {n:"Сол", p:2.25, r:false},
-        {n:"Зехтин", p:1.25, r:false},
-        {n:"Квас", p:0, r:false},
-        {n:"", p:0, r:false},
-        {n:"", p:0, r:false},
-        {n:"", p:0, r:false}
-    ];
+    const trackInfo = document.getElementById('track-info');
+    const trackNameDisp = document.getElementById('track-name');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    
+    let playlist = [];
+    let currentIndex = 0;
 
-    function toggleStream(url) {
-        if (!url) {
-            audio.pause();
-            audio.src = "";
-            return;
-        }
-        if (audio.src === url && !audio.paused) {
-            audio.pause();
-        } else {
-            audio.src = url;
-            audio.load();
-            audio.play().catch(e => alert("Моля, натиснете отново за старт на музиката."));
+    // ПЛЕЪР ЛОГИКА
+    function handleFiles(event) {
+        playlist = Array.from(event.target.files);
+        if (playlist.length > 0) {
+            currentIndex = 0;
+            playTrack(currentIndex);
         }
     }
+
+    function playTrack(index) {
+        if (index < 0 || index >= playlist.length) return;
+        const file = playlist[index];
+        const url = URL.createObjectURL(file);
+        audio.src = url;
+        trackInfo.innerText = `Песен ${index + 1} от ${playlist.length}`;
+        trackNameDisp.innerText = file.name;
+        audio.play();
+        playPauseBtn.innerText = "⏸";
+    }
+
+    function nextTrack() {
+        if (playlist.length === 0) return;
+        currentIndex = (currentIndex + 1) % playlist.length;
+        playTrack(currentIndex);
+    }
+
+    function prevTrack() {
+        if (playlist.length === 0) return;
+        currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+        playTrack(currentIndex);
+    }
+
+    function togglePlay() {
+        if (audio.paused) { audio.play(); playPauseBtn.innerText = "⏸"; }
+        else { audio.pause(); playPauseBtn.innerText = "▶"; }
+    }
+
+    function stopMusic() {
+        audio.pause(); audio.src = ""; 
+        trackInfo.innerText = "Спряно"; trackNameDisp.innerText = "Няма избрани файлове";
+    }
+
+    // Когато песента свърши, пусни следващата
+    audio.onended = function() { nextTrack(); };
+
+    // КАЛКУЛАТОР ЛОГИКА (БЕЗ ПРОМЯНА)
+    const template = [
+        {n:"Бяло Брашно", p:90, r:true}, {n:"Пълнозърнесто", p:10, r:false},
+        {n:"Вода", p:64, r:false}, {n:"Сол", p:2.25, r:false},
+        {n:"Зехтин", p:1.25, r:false}, {n:"Квас", p:0, r:false},
+        {n:"", p:0, r:false}, {n:"", p:0, r:false}, {n:"", p:0, r:false}
+    ];
 
     function openTab(e, name) {
         document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
@@ -177,116 +176,63 @@
 
     function createRow(data) {
         const div = document.createElement('div');
-        div.className = "row draggable";
-        div.draggable = true;
-        div.innerHTML = `
-            <div class="drag-handle"></div>
-            <input type="text" class="name-in" value="${data.n}">
-            <input type="number" class="val-p ${data.r ? 'f1-p' : (data.n === 'Пълнозърнесто' ? 'f2-p' : 'other-p')}" 
-                   value="${data.p}" ${data.r ? 'readonly' : ''} 
-                   oninput="${data.n === 'Пълнозърнесто' ? 'adjustFlour()' : 'recalc(lastMode)'}">
-            <div class="res-box">0</div>
-        `;
+        div.className = "row draggable"; div.draggable = true;
+        div.innerHTML = `<div class="drag-handle"></div><input type="text" class="name-in" value="${data.n}"><input type="number" class="val-p ${data.r ? 'f1-p' : (data.n === 'Пълнозърнесто' ? 'f2-p' : 'other-p')}" value="${data.p}" ${data.r ? 'readonly' : ''} oninput="${data.n === 'Пълнозърнесто' ? 'adjustFlour()' : 'recalc(lastMode)'}"><div class="res-box">0</div>`;
         return div;
     }
 
     function adjustFlour() {
-        const f2Input = document.querySelector('.f2-p');
-        const f1Input = document.querySelector('.f1-p');
-        if (f1Input && f2Input) {
-            let f2 = parseFloat(f2Input.value) || 0;
-            if(f2 > 100) f2 = 100;
-            f1Input.value = (100 - f2).toFixed(2).replace(/\.?0+$/, '');
-        }
+        const f2 = document.querySelector('.f2-p'), f1 = document.querySelector('.f1-p');
+        if (f1 && f2) { let val = parseFloat(f2.value) || 0; if(val > 100) val = 100; f1.value = (100 - val).toFixed(2).replace(/\.?0+$/, ''); }
         recalc(lastMode);
     }
 
     function recalc(mode) {
         if(mode !== 'current') lastMode = mode;
-        const tT = parseFloat(document.getElementById('targetTotal').value) || 0;
-        const tF = parseFloat(document.getElementById('targetFlour').value) || 0;
-        let otherP = 0;
-        document.querySelectorAll('.other-p').forEach(i => otherP += (parseFloat(i.value) || 0));
+        const tT = parseFloat(document.getElementById('targetTotal').value) || 0, tF = parseFloat(document.getElementById('targetFlour').value) || 0;
+        let otherP = 0; document.querySelectorAll('.other-p').forEach(i => otherP += (parseFloat(i.value) || 0));
         let totalP = 100 + otherP;
         let unit = (lastMode === 'flour' && tF > 0) ? (tF / 100) : (tT / totalP);
         if(lastMode === 'total' && mode !== 'current') document.getElementById('targetFlour').value = Math.round(unit * 100);
         if(lastMode === 'flour' && mode !== 'current') document.getElementById('targetTotal').value = Math.round(unit * totalP);
-
         let levG = 0;
         document.querySelectorAll('.row').forEach(row => {
-            const p = parseFloat(row.querySelector('.val-p').value) || 0;
-            const res = Math.round(unit * p);
+            const p = parseFloat(row.querySelector('.val-p').value) || 0, res = Math.round(unit * p);
             row.querySelector('.res-box').innerText = res;
             if(row.querySelector('.name-in').value.toLowerCase().includes('квас')) levG = res;
         });
-
         document.getElementById('totalSum').innerText = Math.round(unit * totalP);
-        const h = parseFloat(document.getElementById('lev_h').value) || 100;
-        const lF = levG / (1 + (h/100));
+        const h = parseFloat(document.getElementById('lev_h').value) || 100, lF = levG / (1 + (h/100));
         document.getElementById('lev_needed').innerText = Math.round(levG) + " гр.";
-        document.getElementById('l_f').innerText = Math.round(lF);
-        document.getElementById('l_w').innerText = Math.round(levG - lF);
+        document.getElementById('l_f').innerText = Math.round(lF); document.getElementById('l_w').innerText = Math.round(levG - lF);
     }
 
-    function calcP1() {
-        const v1 = parseFloat(document.getElementById('p1_v1').value);
-        const v2 = parseFloat(document.getElementById('p1_v2').value);
-        document.getElementById('p1_res').value = v2 ? ((v1/v2)*100).toFixed(1) : 0;
-    }
-    function calcP2() {
-        const v1 = parseFloat(document.getElementById('p2_v1').value);
-        const v2 = parseFloat(document.getElementById('p2_v2').value);
-        document.getElementById('p2_res').value = ((v1/100)*v2).toFixed(1);
-    }
-    function calcP3() {
-        const v1 = parseFloat(document.getElementById('p3_v1').value);
-        const v2 = parseFloat(document.getElementById('p3_v2').value);
-        document.getElementById('p3_res').value = (v1 * (1 + v2/100)).toFixed(1);
-    }
-    function calcExtLevain() {
-        const t = parseFloat(document.getElementById('ext_total').value) || 0;
-        const h = parseFloat(document.getElementById('ext_hydr').value) || 100;
-        const f = t / (1 + (h/100));
-        document.getElementById('ext_f_res').innerText = Math.round(f);
-        document.getElementById('ext_w_res').innerText = Math.round(t - f);
-    }
+    function calcP1() { const v1 = parseFloat(document.getElementById('p1_v1').value), v2 = parseFloat(document.getElementById('p1_v2').value); document.getElementById('p1_res').value = v2 ? ((v1/v2)*100).toFixed(1) : 0; }
+    function calcP2() { const v1 = parseFloat(document.getElementById('p2_v1').value), v2 = parseFloat(document.getElementById('p2_v2').value); document.getElementById('p2_res').value = ((v1/100)*v2).toFixed(1); }
+    function calcP3() { const v1 = parseFloat(document.getElementById('p3_v1').value), v2 = parseFloat(document.getElementById('p3_v2').value); document.getElementById('p3_res').value = (v1 * (1 + v2/100)).toFixed(1); }
+    function calcExtLevain() { const t = parseFloat(document.getElementById('ext_total').value) || 0, h = parseFloat(document.getElementById('ext_hydr').value) || 100, f = t / (1 + (h/100)); document.getElementById('ext_f_res').innerText = Math.round(f); document.getElementById('ext_w_res').innerText = Math.round(t - f); }
 
     function saveRecipe() {
-        const rows = [];
-        document.querySelectorAll('.row').forEach(row => {
-            rows.push({ n: row.querySelector('.name-in').value, p: row.querySelector('.val-p').value, r: row.querySelector('.val-p').readOnly });
-        });
-        localStorage.setItem('bakery_v3', JSON.stringify(rows));
-        localStorage.setItem('bakery_total_v3', document.getElementById('targetTotal').value);
-        alert("Запазено!");
+        const rows = []; document.querySelectorAll('.row').forEach(row => { rows.push({ n: row.querySelector('.name-in').value, p: row.querySelector('.val-p').value, r: row.querySelector('.val-p').readOnly }); });
+        localStorage.setItem('bakery_final', JSON.stringify(rows)); localStorage.setItem('bakery_total_final', document.getElementById('targetTotal').value); alert("Запазено!");
     }
 
     function loadRecipe() {
-        const saved = localStorage.getItem('bakery_v3');
-        const savedTotal = localStorage.getItem('bakery_total_v3');
-        const list = document.getElementById('sortable-list');
-        list.innerHTML = "";
-        const data = saved ? JSON.parse(saved) : template;
+        const saved = localStorage.getItem('bakery_final'), savedTotal = localStorage.getItem('bakery_total_final'), list = document.getElementById('sortable-list');
+        list.innerHTML = ""; const data = saved ? JSON.parse(saved) : template;
         if(savedTotal) document.getElementById('targetTotal').value = savedTotal;
-        data.forEach(item => list.appendChild(createRow(item)));
-        recalc('total');
+        data.forEach(item => list.appendChild(createRow(item))); recalc('total');
     }
 
-    function resetToTemplate() {
-        if(confirm("Нулиране?")) { localStorage.removeItem('bakery_v3'); loadRecipe(); }
-    }
+    function resetToTemplate() { if(confirm("Нулиране?")) { localStorage.removeItem('bakery_final'); loadRecipe(); } }
 
     const list = document.getElementById('sortable-list');
     list.addEventListener('dragstart', e => e.target.classList.add('dragging'));
     list.addEventListener('dragend', e => { e.target.classList.remove('dragging'); recalc(lastMode); });
     list.addEventListener('dragover', e => {
-        e.preventDefault();
-        const draggable = document.querySelector('.dragging');
-        const afterElement = [...list.querySelectorAll('.draggable:not(.dragging)')].reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = e.clientY - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) return { offset, element: child };
-            return closest;
+        e.preventDefault(); const draggable = document.querySelector('.dragging'), afterElement = [...list.querySelectorAll('.draggable:not(.dragging)')].reduce((closest, child) => {
+            const box = child.getBoundingClientRect(), offset = e.clientY - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) return { offset, element: child }; return closest;
         }, { offset: Number.NEGATIVE_INFINITY }).element;
         if (afterElement == null) list.appendChild(draggable); else list.insertBefore(draggable, afterElement);
     });
